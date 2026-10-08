@@ -1327,47 +1327,10 @@ export default {
 };
 
 async function serveMaintenancePage(request, url) {
-    // Breaker L1: skip the origin fetch under load ( shards of ubuntu/docker
-    // fetches during floods kept isolates busy with zero user value).
-    try {
-        if (breakerLevel() >= 1) {
-            return new Response("Not Found", { status: 404 });
-        }
-    } catch (e) {}
-    let fakeList = sysConfig.maintenanceHost
-        ? sysConfig.maintenanceHost
-              .split(",")
-              .map((s) => s.trim())
-              .filter((s) => s)
-        : ["https://www.ubuntu.com"];
-    const clientIP = request.headers.get("cf-connecting-ip") || "0.0.0.0";
-    const ipHash = Array.from(clientIP).reduce(
-        (acc, char) => acc + char.charCodeAt(0),
-        0,
-    );
-    const targetStr = fakeList[ipHash % fakeList.length].startsWith("http")
-        ? fakeList[ipHash % fakeList.length]
-        : `https://${fakeList[ipHash % fakeList.length]}`;
-
-    try {
-        const targetUrl = new URL(targetStr);
-        if (url.pathname !== "/") targetUrl.pathname = url.pathname;
-        targetUrl.search = url.search;
-        const cleanHeaders = new Headers(request.headers);
-        cleanHeaders.set("Host", targetUrl.hostname);
-        cleanHeaders.delete("cf-connecting-ip");
-        cleanHeaders.delete("x-forwarded-for");
-        const fetchInit = {
-            method: request.method,
-            headers: cleanHeaders,
-            redirect: "follow",
-        };
-        if (request.method !== "GET" && request.method !== "HEAD")
-            fetchInit.body = request.body;
-        return await fetchT(new Request(targetUrl.toString(), fetchInit));
-    } catch (e) {
-        return new Response("Not Found", { status: 404 });
-    }
+    return new Response("<h1>Hello World</h1>", {
+        status: 200,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
 }
 
 
